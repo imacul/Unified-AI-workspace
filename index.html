@@ -400,6 +400,29 @@ async function sendMessage(){
   try {
     const streamEnabled = document.getElementById("stream-toggle").checked;
     const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model, stream: streamEnabled && conv.provider === "huggingface" };
+    // --- Vanilla backend call ---
+    setLoading(true);
+    try {
+        const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model };
+
+        const response = await fetch("http://localhost:3001/sendmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        console.log("Backend returned:", data);
+
+        if (data && data.message) {
+            const respProvider = data.provider || conv.provider;
+            const respModel = data.model || conv.model;
+            conv.messages.push(createMessage("assistant", data.message, respProvider, respModel));
+        } else if (data && data.error) {
+            conv.messages.push(createMessage("assistant", `AI error: ${data.error}`));
+        } else {
+            conv.messages.push(createMessage("assistant", "No response from backend."));
+        }
 
     const response = await fetch("http://localhost:3001/sendmessage", {
       method: "POST",
