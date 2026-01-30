@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node main.js",
+    "dev": "node dev.js",
     "test": "node test/test_sendmessage.js"
   }
 }
