@@ -201,7 +201,7 @@ async function sendMessage(){
     try {
         const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model };
 
-        const response = await fetch("http://localhost:3000/sendmessage", {
+        const response = await fetch("http://localhost:3001/sendmessage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
