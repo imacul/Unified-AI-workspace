@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Unified Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-sidebar: #0f0f10;
+    --bg-main: #171719;
+    --bg-input: #212123;
+    --border-color: #2d2d30;
+    --text-primary: #ececec;
+    --text-secondary: #9da3ae;
+    --accent: #3b82f6;
+    --ai-bubble: #212123;
+    --user-bubble: #2f2f32;
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-primary); height: 100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+aside { width:280px; background-color: var(--bg-sidebar); border-right:1px solid var(--border-color); display:flex; flex-direction:column; padding:16px; }
+.app-logo { font-weight:600; font-size:1.2rem; margin-bottom:24px; padding-left:8px; letter-spacing:-0.5px; }
+.btn-new-chat { background:transparent; border:1px solid var(--border-color); color: var(--text-primary); padding:10px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:24px; transition: background 0.2s; }
+.btn-new-chat:hover { background:#ffffff0a; }
+.history-list { flex:1; overflow-y:auto; }
+.history-item { padding:10px 12px; border-radius:8px; font-size:0.9rem; color:var(--text-secondary); cursor:pointer; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:10px; }
+.history-item:hover { background:#ffffff08; color:var(--text-primary); }
+.history-item.active { background:#ffffff10; color:var(--text-primary); }
+
+/* Sidebar footer */
+.sidebar-footer { margin-top:auto; padding-top:20px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; color:var(--text-secondary); }
+.profile-pic { width:32px; height:32px; border-radius:50%; background:#444; }
+
+/* Main content */
+main { flex:1; display:flex; flex-direction:column; position:relative; }
+header { height:64px; border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; padding:0 24px; }
+.selectors { display:flex; gap:12px; }
+select { background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:6px; font-size:0.85rem; outline:none; cursor:pointer; }
+.header-actions { display:flex; align-items:center; gap:16px; font-size:0.85rem; color:var(--text-secondary); }
+
+/* Chat area */
+#chat-container { flex:1; overflow-y:auto; padding:40px 15%; display:flex; flex-direction:column; gap:32px; }
+.message { max-width:850px; line-height:1.6; font-size:1rem; position:relative; }
+.message.user { align-self:flex-end; background:var(--user-bubble); padding:12px 20px; border-radius:18px; max-width:70%; }
+.message.ai { align-self:flex-start; background:var(--ai-bubble); padding:12px 20px; border-radius:18px; }
+.model-tag { font-size:0.7rem; text-transform:uppercase; color:var(--text-secondary); margin-bottom:8px; display:block; font-weight:600; }
+
+/* Input area */
+.input-wrapper { padding:24px 15% 40px 15%; background: linear-gradient(transparent, var(--bg-main) 30%); }
+.input-container { background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:12px 16px; display:flex; align-items:flex-end; gap:12px; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+textarea { flex:1; background:transparent; border:none; color:var(--text-primary); resize:none; font-family:inherit; font-size:1rem; outline:none; max-height:200px; padding:4px 0; }
+.btn-send { background: var(--accent); color:white; border:none; width:32px; height:32px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity 0.2s; }
+.btn-send:hover { opacity:0.8; }
+.attach { color: var(--text-secondary); cursor:pointer; font-size:1.2rem; }
+.typing-indicator { color: var(--text-secondary); font-size:0.9rem; padding-left:8px; }
+</style>
+</head>
+<body>
+
+<aside>
+    <div class="app-logo">Cohere AI</div>
+    <button class="btn-new-chat" onclick="newChat()"><span>+</span> New Chat</button>
+    <div class="history-list chat-list"></div>
+    <div class="sidebar-footer">
+        <span>Settings</span>
+        <div class="profile-pic"></div>
+    </div>
+</aside>
+
+<main>
+    <header>
+        <div class="selectors">
+            <select id="provider-select">
+                <option value="gpt">ChatGPT</option>
+                <option value="claude" selected>Claude</option>
+                <option value="gemini">Gemini</option>
+            </select>
+            <select id="model-select"></select>
+        </div>
+        <div class="header-actions">
+            <span onclick="clearChat()">Clear Chat</span>
+            <label style="display:flex; align-items:center; gap:8px;">
+                Memory <input type="checkbox" checked>
+            </label>
+        </div>
+    </header>
+
+    <div id="chat-container" class="chat-messages"></div>
+
+    <div class="input-wrapper">
+        <div class="input-container">
+            <span class="attach">📎</span>
+            <textarea id="user-input" placeholder="Ask anything..." rows="1"></textarea>
+            <button id="send-btn" class="btn-send" onclick="sendMessage()">↑</button>
+            <span id="typing-indicator" class="typing-indicator" style="display:none;">AI typing…</span>
+        </div>
+    </div>
+</main>
+
+<script>
+const models = {
+    gpt: ['GPT-4o','GPT-4 Turbo','GPT-3.5'],
+    claude: ['Claude 3.5 Sonnet','Claude 3 Opus','Claude 3 Haiku'],
+    gemini: ['Gemini 1.5 Pro','Gemini 1.5 Flash']
+};
+
+// --- App state ---
+let appState = { conversations:[], activeConversationId:null };
+
+// --- Persistence ---
+function saveState(){ localStorage.setItem("ai_workspace_state", JSON.stringify(appState)); }
+function loadState(){ const saved = localStorage.getItem("ai_workspace_state"); if(saved) appState = JSON.parse(saved); }
+
+// --- Helpers ---
+function createConversation(provider, model){ return { id:crypto.randomUUID(), title:"New Chat", provider, model, messages:[], createdAt:Date.now() }; }
+function createMessage(role, content, provider=null, model=null){ return { role, content, provider, model, timestamp:Date.now() }; }
+
+// --- Render ---
+function renderConversationList(){
+    const list = document.querySelector(".chat-list");
+    list.innerHTML = "";
+    appState.conversations.forEach(conv=>{
+        const div=document.createElement("div");
+        div.className="history-item"+(conv.id===appState.activeConversationId?" active":"");
+        div.textContent=conv.title;
+        div.onclick=()=>{ appState.activeConversationId=conv.id; saveState(); render(); };
+        list.appendChild(div);
+    });
+}
+
+function renderMessages(){
+    const chat=document.querySelector(".chat-messages");
+    chat.innerHTML="";
+    const conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
+    if(!conv) return;
+    conv.messages.forEach(msg=>{
+        const div=document.createElement("div");
+        div.className="message "+(msg.role==="assistant"?"ai":"user");
+        div.innerHTML=msg.role==="assistant"?`<span class="model-tag">${msg.model}</span>${msg.content}`:msg.content;
+        chat.appendChild(div);
+    });
+    chat.scrollTop=chat.scrollHeight;
+}
+
+function render(){ renderConversationList(); renderMessages(); updateModels(); }
+
+// --- UI Actions ---
+function updateModels(){
+    const provider=document.getElementById('provider-select').value;
+    const modelSelect=document.getElementById('model-select');
+    modelSelect.innerHTML="";
+    models[provider].forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=m; modelSelect.appendChild(opt); });
+}
+
+// --- Send message ---
+async function sendMessage(){
+    const input=document.getElementById('user-input');
+    const text=input.value.trim();
+    if(!text) return;
+    let conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
+    if(!conv){ // create new conversation if none
+        const provider=document.getElementById('provider-select').value;
+        const model=document.getElementById('model-select').value;
+        conv=createConversation(provider,model);
+        appState.conversations.push(conv);
+        appState.activeConversationId=conv.id;
+    }
+
+    // Add user message
+    conv.messages.push(createMessage("user", text, conv.provider, conv.model));
+    conv.title=text.slice(0,30);
+
+    // Update UI immediately
+    render();
+    saveState();
+    input.value="";
+
+    const sendBtn = document.getElementById('send-btn');
+    const typingEl = document.getElementById('typing-indicator');
+    const setLoading = (loading) => {
+        if(loading){
+            typingEl.style.display = 'inline-block';
+            sendBtn.disabled = true;
+            input.disabled = true;
+            sendBtn.style.opacity = '0.6';
+        } else {
+            typingEl.style.display = 'none';
+            sendBtn.disabled = false;
+            input.disabled = false;
+            sendBtn.style.opacity = '';
+        }
+    };
+
+    // --- Vanilla backend call ---
+    setLoading(true);
+    try {
+        const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model };
+
+        const response = await fetch("http://localhost:3000/sendmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        console.log("Backend returned:", data);
+
+        if (data && data.message) {
+            const respProvider = data.provider || conv.provider;
+            const respModel = data.model || conv.model;
+            conv.messages.push(createMessage("assistant", data.message, respProvider, respModel));
+        } else if (data && data.error) {
+            conv.messages.push(createMessage("assistant", `AI error: ${data.error}`));
+        } else {
+            conv.messages.push(createMessage("assistant", "No response from backend."));
+        }
+
+        render();
+        saveState();
+
+    } catch(err){
+        console.error("Backend request failed:", err);
+        conv.messages.push(createMessage("assistant", `AI response failed: ${err.message || err}`));
+        render();
+        saveState();
+    } finally {
+        setLoading(false);
+    }
+}
+
+// --- Chat actions ---
+function newChat(){ appState.activeConversationId=null; render(); }
+function clearChat(){
+    const conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
+    if(!conv) return;
+    conv.messages=[];
+    saveState();
+    render();
+}
+
+// --- Init ---
+loadState();
+render();
+
+// --- Enter key ---
+document.querySelector('#user-input').addEventListener('keypress', function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+});
+</script>
+
+</body>
+</html>

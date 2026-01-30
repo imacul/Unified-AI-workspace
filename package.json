@@ -1,0 +1,9 @@
+{
+  "name": "ai-unified-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node main.js",
+    "test": "node test/test_sendmessage.js"
+  }
+}
