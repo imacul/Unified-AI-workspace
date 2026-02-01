@@ -1,0 +1,12 @@
+{
+  "failover-test": {
+    "sessionId": "failover-test",
+    "summary": "**Title:** Normal HF Test with Fallback Trigger\n\n• The initial test was deemed normal.\n• A loop was triggered when the test was repeated, prompting a fallback.\n• The fallback successfully restored the High Fidelity mode.\n\n**Next Steps:** Monitor the system to ensure stable operation after the fallback.",
+    "updated": 1769982218973
+  },
+  "rl-test": {
+    "sessionId": "rl-test",
+    "summary": "**Title:** Establishing a Conversation Topic\n\n**Key Facts:**\n\n* The user initiated a conversation without a specific topic or question.\n* The assistant suggested starting a topic or playing a game to continue the conversation.\n* The user continued counting without providing context.\n\n**Next Steps:** Encourage the user to share their thoughts or interests to determine a suitable conversation topic.",
+    "updated": 1769982627255
+  }
+}

@@ -1,0 +1,31 @@
+name: E2E (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+      CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      AUTH_ENABLED: 'true'
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate dev token
+        run: npm run gen-token > dev_token.txt
+      - name: Run integration tests
+        run: |
+          export AUTH_TOKEN=$(cat dev_token.txt)
+          export SEND_AUTH="Authorization: Bearer $AUTH_TOKEN"
+          # Run integration tests (they should use AUTH_ENABLED and headers)
+          node test/integration_sessions.js

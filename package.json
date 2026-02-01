@@ -4,7 +4,24 @@
   "private": true,
   "scripts": {
     "start": "node main.js",
-    "dev": "node dev.js",
-    "test": "node test/test_sendmessage.js"
+    "dev": "DEV_FALLBACK=true node main.js",
+    "test": "DEV_FALLBACK=true node test/test_sendmessage.js",
+    "test:all": "DEV_FALLBACK=true node test/test_sendmessage.js && DEV_FALLBACK=true node test/test_rate_limiter.js && DEV_FALLBACK=true node test/test_playwright_adapter.js && DEV_FALLBACK=true node test/test_export.js && DEV_FALLBACK=true node test/test_search.js && DEV_FALLBACK=true node test/test_provider_merge.js && DEV_FALLBACK=true node test/test_adapter_parsing.js && DEV_FALLBACK=true node test/test_redis_integration.js",
+    "test:adapters": "DEV_FALLBACK=true node test/test_adapter_parsing.js",
+    "integration": "DEV_FALLBACK=true node test/integration_sessions.js",
+    "migrate-redis": "node server/scripts/migrate_sessions_to_redis.js",
+    "gen-token": "node ./bin/gen_token.js",
+    "serve": "node scripts/serve_static.js",
+    "lint": "eslint . --ext .js"
+  },
+  "dependencies": {
+    "redis": "^4.6.7",
+    "playwright": "^1.37.0",
+    "jsonwebtoken": "^9.0.0",
+    "prom-client": "^14.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "prettier": "^2.8.8"
   }
 }

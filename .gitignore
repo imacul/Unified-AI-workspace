@@ -1,6 +1,21 @@
+# Node deps
 node_modules/
+
+# Local envs and secrets
 .env
+.env.*
+
+# OS / IDE
 .DS_Store
+.vscode/
+.idea/
+
+# Logs
 npm-debug.log
+
+# Build outputs
 /dist
-.env
+
+# Runtime data
+sessions.json
+analytics.json

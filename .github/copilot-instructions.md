@@ -1,109 +1,179 @@
-# AI Unified Workspace - Copilot Instructions
+Project Purpose
 
-## Project Overview
-This is a unified AI chat interface built with **vanilla HTML/CSS/JavaScript** (frontend) and **Node.js/http module** (backend). The application allows users to select from multiple AI providers (ChatGPT, Claude, Gemini) and models, manage chat conversations, and persist state via localStorage.
+The AI Unified Workspace is a multi-provider AI chat interface designed for developers and end-users to interact with different AI models (ChatGPT, Hugging Face models, Claude, Gemini, etc.) from a single unified interface. The app supports conversation context, cognitive looping, and session-based memory, enabling follow-up questions and richer interactions without losing context.
 
-## Architecture
+Architecture Overview
+Frontend (Vanilla HTML/CSS/JS)
 
-### Frontend (`index.html` + inline `<script>`)
-- **UI Framework**: Vanilla (no React/Vue)
-- **Styling**: CSS variables for theme (dark mode), flexbox layout
-- **State Management**: `appState` object with:
-  - `conversations`: Array of conversation objects (id, title, provider, model, messages, createdAt)
-  - `activeConversationId`: Current conversation being viewed
-- **Persistence**: `localStorage` with key `"ai_workspace_state"`
-- **Key Functions**:
-  - `sendMessage()`: Orchestrates message flow - adds user message, calls backend, handles response
-  - `render()`: Re-renders conversation list and messages (called after each state change)
-  - `newChat()` / `clearChat()`: Conversation management
-- **CORS Handling**: Frontend sends POST to `http://localhost:3000/sendmessage`
+UI: Pure HTML + CSS, no React/Vue. CSS variables handle theming (dark/light).
 
-### Backend (`main.js`)
-- **Runtime**: Node.js http module (no Express)
-- **Port**: 3000
-- **Endpoints**:
-  - `POST /sendmessage`: Accepts `{ text }` JSON, returns `{ message: "You said: ..." }`
-  - `OPTIONS /sendmessage`: CORS preflight handling
-  - All others: 404
-- **JSON Parsing**: Manual with try-catch error handling
-- **CORS Headers**: Set on all responses to allow frontend requests
+Layout: Flexbox-based chat window with conversation list and active chat panel.
 
-## Key Conventions
+State Management: Single appState object:
 
-### Message Objects
-```javascript
+appState = {
+  conversations: [
+    {
+      id, title, provider, model,
+      messages: [{ role, content, timestamp }],
+      createdAt
+    }
+  ],
+  activeConversationId: null
+}
+
+
+Persistence: Stored in localStorage under "ai_workspace_state".
+
+Key Functions:
+
+sendMessage(): Adds user input, calls backend, appends AI response.
+
+newChat() / clearChat(): Manage conversations.
+
+render(): Re-renders conversation list and messages after any update.
+
+Provider & Model Selection:
+
+Hardcoded models object per provider.
+
+Dropdowns update dynamically; changing model mid-conversation preserves messages.
+
+Backend (Node.js / http module)
+
+Runtime: Node.js, vanilla http module, no Express.
+
+Port: 3000 (or 3001 if testing dev.js).
+
+Endpoints:
+
+POST /sendmessage: Accepts { text, provider, model, sessionId }.
+
+OPTIONS /sendmessage: CORS preflight.
+
+All other routes: 404 Not Found.
+
+Environment Variables:
+
+.env file stores keys like HUGGINGFACE_API_KEY or OPENAI_API_KEY.
+
+Cognitive Loop / Session Memory:
+
+Each session (sessionId) stores last N messages (user + AI) in memory.
+
+These messages are sent to AI calls to provide conversation context.
+
+Maintains a sliding window (e.g., last 10-20 messages) to avoid large payloads.
+
+AI Providers:
+
+Hugging Face: Default open-source LLaMA models, supports streaming and non-streaming calls.
+
+OpenAI: GPT models if API key is available.
+
+Error Handling:
+
+JSON parsing with try-catch.
+
+Logs raw requests and responses for debugging.
+
+Graceful fallback if AI call fails: echoes user input.
+
+CORS Headers: Sent on all responses to allow frontend requests.
+
+Cognitive Loop Implementation
+
+In-Memory Session Store:
+
+sessions = { sessionId: [{ role, content }, ...] };
+
+
+Message Flow:
+
+Frontend sends { text, sessionId, provider, model }.
+
+Backend prepends systemPrompt + session memory.
+
+AI response returned, appended to session memory.
+
+Memory is truncated to last N messages to avoid bloating.
+
+Benefits:
+
+Follow-up questions work naturally.
+
+AI can reference previous messages in the same session.
+
+Supports multiple concurrent sessions/users.
+
+Message & Conversation Objects
+Message Object
 { role: "user" | "assistant", content: string, provider?: string, model?: string, timestamp: number }
-```
-- Role "user" renders right-aligned with `--user-bubble` color
-- Role "assistant" renders left-aligned with model tag, `--ai-bubble` color
 
-### Conversation Objects
-```javascript
+
+user messages: Right-aligned bubble.
+
+assistant messages: Left-aligned bubble with model tag.
+
+Conversation Object
 { id: UUID, title: string, provider: string, model: string, messages: [], createdAt: number }
-```
-- Title auto-populated from first 30 chars of user's first message
-- All messages in a conversation share the same provider/model pair
 
-### Data Flow
-1. User types → `sendMessage()` adds user message to conversation
-2. UI renders immediately (optimistic update via `render()`)
-3. Fetch to backend with `{ text }`
-4. Backend echoes response as `{ message: "..." }`
-5. Response message appended to conversation
-6. State saved to localStorage and re-rendered
 
-## Important Patterns
+Title auto-generated from first user message (first 30 characters).
 
-### localStorage Persistence
-- **Key**: `"ai_workspace_state"` 
-- **Format**: Full JSON stringification of `appState`
-- **Timing**: Called in `saveState()` after state mutations (newChat, clearChat, sendMessage)
-- **Don't forget**: Calls to `saveState()` are critical - missing them loses data
+Each conversation maintains a provider-model pair.
 
-### DOM Rendering
-- **Approach**: Full re-render on each state change (not incremental)
-- **Functions**: `renderConversationList()` and `renderMessages()` clear innerHTML and rebuild
-- **Scroll**: Auto-scroll chat to bottom after rendering messages
-- **Active state**: History items marked with `.active` class for current conversation
+Data Flow Summary
 
-### Provider/Model Selection
-- `models` object defines available options per provider (hardcoded)
-- Model select updates dynamically when provider changes via `updateModels()`
-- Selects are in header; need to re-render message display if changed mid-conversation
+User types → sendMessage() updates frontend.
 
-## Common Tasks & Implementation Patterns
+Frontend renders optimistically.
 
-### Adding a New Conversation Field
-- Add to `createConversation()` function
-- Include in localStorage save/load (already JSON stringified, no extra work)
-- Update `renderConversationList()` if visible to user
+POST to backend: { text, sessionId, provider, model }.
 
-### Modifying Message Display
-- Edit `renderMessages()` function - controls HTML generation
-- Adjust CSS classes `.message.user` and `.message.ai` for styling
-- Remember: model tag only shows for assistant messages
+Backend:
 
-### Backend Changes
-- All routes must handle CORS (OPTIONS method + headers)
-- Response format must be `{ message: "..." }` for frontend to work
-- Use `res.end()` not `send()` (vanilla http module)
+Prepends session memory.
 
-### Debugging
-- Frontend logs to console: "Backend returned:", "Backend request failed"
-- Backend logs: "Raw body:", "Parsed:", "JSON parse error"
-- Check localStorage in DevTools → Application tab for state inspection
+Calls AI provider.
 
-## Critical Notes
+Stores AI response in session memory.
 
-- **No build step**: HTML/JS runs directly in browser
-- **No module system**: All code is inline or in main.js via Node.js require
-- **Cross-origin**: Frontend at file:// or localhost:5000+ calling backend at localhost:3000
-- **State loss on reload**: Data persists via localStorage (survives browser close)
-- **Duplicate code alert**: `sendMessage()` function appears twice in index.html with slight variations - consolidate if editing
+Response appended to conversation.
 
-## Running the Application
+Frontend saves updated state to localStorage and re-renders.
 
-```bash
-node main.js           # Start backend at localhost:3000
-# Then open index.html in browser (or run via live server)
-```
+Critical Notes
+
+No build step: Vanilla HTML/JS runs in browser.
+
+Backend handles CORS, JSON parsing, AI call errors.
+
+Cognitive loop memory is in-memory, resets on server restart.
+
+Streaming from Hugging Face supported for real-time feedback.
+
+LocalStorage persistence ensures chat history survives page reloads.
+
+important Steps
+
+Finalize dev.js with cognitive loop fully integrated.
+
+Test Hugging Face API calls with open-source LLaMA or similar.
+
+Verify session memory & message flow in frontend.
+
+Must Add persistent storage (Redis / file) for cognitive loop.
+
+UI improvements: auto-scroll, message bubbles, model tags, provider selection.
+
+Error handling: Graceful fallback for AI failure, invalid API keys.
+
+Running the Project
+node dev.js            # Start backend at localhost:3001
+# Open index.html in browser
+
+
+Make sure .env exists with HUGGINGFACE_API_KEY (and OPENAI_API_KEY if using OpenAI).
+
+Frontend sends requests to backend for every message, maintaining session memory.

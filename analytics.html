@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Analytics Dashboard</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#071018;color:#e8eef6;padding:20px}
+    .card{background:#0d1620;border:1px solid #1e2a3a;padding:16px;border-radius:8px;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #12202b;text-align:left}
+    th{color:#9aa8ba;font-size:.85rem}
+    .muted{color:#9aa8ba}
+  </style>
+</head>
+<body>
+  <h1>Analytics</h1>
+  <div class="card">
+    <div id="summary">Loading...</div>
+  </div>
+  <div class="card">
+    <h3>Provider Metrics</h3>
+    <table id="providers"><thead><tr><th>Provider</th><th>Count</th><th>Last Latency (ms)</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+      // RICHER ANALYTICS: Provider calls bar chart + latency histogram per provider.
+      let callsChart = null;
+      let latencyChart = null;
+      let refreshInterval = null;
+
+      function buildEmptyCharts(){
+        const callsCtx = document.getElementById('calls-canvas').getContext('2d');
+        callsChart = new Chart(callsCtx, { type: 'bar', data: { labels: [], datasets: [{ label: 'Provider Calls', data: [], backgroundColor: [] }] }, options: { responsive:true, plugins:{legend:{display:false}} } });
+
+        const latCtx = document.getElementById('latency-canvas').getContext('2d');
+        latencyChart = new Chart(latCtx, { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive:true, scales:{ y:{ beginAtZero:true } } } });
+      }
+
+      function colorForLabel(i){ const palette=['#14b8a6','#f59e0b','#60a5fa','#f472b6','#34d399']; return palette[i % palette.length]; }
+
+      async function fetchAnalytics(){
+        try{
+          const [aRes, mRes] = await Promise.all([fetch('/analytics'), fetch('/metrics.json')]);
+          const aData = aRes.ok ? await aRes.json() : { providers: {} };
+          const mData = mRes.ok ? await mRes.json() : null;
+          document.getElementById('summary').textContent = `Source: ${aData?.source || 'unknown'}`;
+          const providers = aData?.providers || {};
+          renderProvidersTable(providers);
+          renderCallsChart(providers);
+          if(mData) renderLatencyFromMetrics(mData);
+        }catch(e){ document.getElementById('summary').textContent = 'Analytics error'; }
+      }
+
+      function renderProvidersTable(providers){
+        const tbody = document.querySelector('#providers tbody'); tbody.innerHTML='';
+        Object.keys(providers).forEach(p=>{
+          const r = providers[p] || {};
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${p}</td><td>${r.count||0}</td><td>${r.lastLatency||0}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderCallsChart(providers){
+        const labels = Object.keys(providers);
+        const counts = labels.map((l,i)=>providers[l]?.count||0);
+        const colors = labels.map((_,i)=>colorForLabel(i));
+        callsChart.data.labels = labels;
+        callsChart.data.datasets[0].data = counts;
+        callsChart.data.datasets[0].backgroundColor = colors;
+        callsChart.update();
+      }
+
+      // Parse metrics JSON from prom-client to extract latency histogram buckets per provider
+      function renderLatencyFromMetrics(metricsJson){
+        try{
+          const hist = metricsJson.find(m => m.name === 'ai_workspace_provider_latency_ms_bucket');
+          if(!hist || !hist.values) return;
+          const buckets = {};
+          hist.values.forEach(v=>{
+            const le = v.labels.le; const provider = v.labels.provider || 'unknown';
+            buckets[provider] = buckets[provider] || {}; buckets[provider][le] = Number(v.value||0);
+          });
+          const les = [...new Set(hist.values.map(v=>v.labels.le))].sort((a,b)=>Number(a)-Number(b));
+          latencyChart.data.labels = les;
+          latencyChart.data.datasets = Object.keys(buckets).map((provider,i)=>({ label: provider, data: les.map(l=>buckets[provider][l]||0), backgroundColor: colorForLabel(i) }));
+          latencyChart.update();
+        }catch(e){ console.warn('latency render failed', e); }
+      }
+
+      function startAutoRefresh(){
+        fetchAnalytics();
+        if(refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(fetchAnalytics, 15000);
+      }
+
+      // UI controls
+      document.addEventListener('DOMContentLoaded', ()=>{ buildEmptyCharts(); startAutoRefresh(); document.getElementById('refresh-btn').addEventListener('click', fetchAnalytics); });
+    </script>
+  </script>
+</body>
+</html>

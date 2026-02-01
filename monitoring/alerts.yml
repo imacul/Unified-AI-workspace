@@ -1,0 +1,20 @@
+groups:
+  - name: ai-workspace-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total[2m]) > 0.05
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "High error rate detected for AI Workspace"
+          description: "The rate of HTTP requests is high. Check service logs."
+
+      - alert: HighProviderLatency
+        expr: histogram_quantile(0.95, sum(rate(ai_workspace_provider_latency_ms_bucket[5m])) by (le, provider)) > 2000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High provider latency detected"
+          description: "95th percentile provider latency over 5m exceeds 2s."

@@ -25,6 +25,11 @@
   --danger:#f87171;
   --shadow:0 20px 60px rgba(0,0,0,.35);
 }
+/* Accessibility helpers */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Focus styles for keyboard users */
+:focus-visible{outline:3px solid rgba(20,184,166,0.25);outline-offset:3px;border-radius:6px}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
   font-family:"Space Grotesk",system-ui,sans-serif;
@@ -113,6 +118,7 @@ aside{
   width:32px;height:32px;border-radius:10px;
   background:linear-gradient(135deg,#2f3b52,#1d2736);
 }
+.profile-pic[role="img"]{display:inline-block}
 
 main{
   flex:1;
@@ -254,6 +260,7 @@ textarea{
 </style>
 </head>
 <body>
+  <a href="#chat-container" class="sr-only">Skip to chat</a>
 
 <aside>
   <div class="brand"><span class="brand-dot"></span>Unified AI</div>
@@ -267,23 +274,51 @@ textarea{
 
 <main>
   <div class="topbar">
-    <div class="selectors">
-      <select id="provider-select">
+      <div style="display:flex;align-items:center;gap:8px;">
+      <label for="provider-select" class="sr-only">Provider</label>
+      <select id="provider-select" aria-label="Provider selection">
         <option value="gpt">ChatGPT</option>
         <option value="claude">Claude</option>
         <option value="gemini">Gemini</option>
         <option value="huggingface" selected>Hugging Face</option>
       </select>
-      <select id="model-select"></select>
+      <label for="model-select" class="sr-only">Model</label>
+      <select id="model-select" aria-label="Model selection"></select>
     </div>
     <div class="toggles">
       <button class="btn-ghost" onclick="clearChat()">Clear</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="auth-btn" class="btn-ghost" onclick="openAuthModal()" aria-haspopup="dialog">Auth</button>
+        <label for="search-input" class="sr-only">Search conversations</label>
+        <input id="search-input" aria-label="Search conversations" placeholder="Search conversations" style="background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:8px;width:220px;" />
+        <button class="btn-ghost" onclick="performSearch()">Search</button>
+        <div style="position:relative;">
+          <button class="btn-ghost" id="export-btn" aria-haspopup="true" aria-expanded="false">Export ▾</button>
+          <div id="export-menu" style="display:none;position:absolute;right:0;top:40px;background:var(--panel);border:1px solid var(--border);padding:6px;border-radius:8px;width:140px;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button class="btn-ghost" onclick="exportCurrentSession('json')">Export JSON</button>
+              <button class="btn-ghost" onclick="exportCurrentSession('md')">Export Markdown</button>
+              <button class="btn-ghost" onclick="exportCurrentSession('pdf')">Export PDF</button>
+            </div>
+          </div>
+        </div>
+        <button id="analytics-btn" class="btn-ghost" onclick="openAnalytics()">Analytics</button>
+      </div>
       <label class="toggle">Memory <input type="checkbox" checked></label>
       <label class="toggle">Stream <input id="stream-toggle" type="checkbox" checked></label>
     </div>
   </div>
 
-  <div id="chat-container" class="chat-messages"></div>
+  <div id="chat-container" class="chat-messages" role="log" aria-live="polite" aria-atomic="false"></div>
+
+    <!-- Search results panel -->
+    <div id="search-results" style="position:fixed;right:20px;top:90px;width:360px;max-height:60vh;overflow:auto;display:none;background:linear-gradient(180deg,#081018,#0b1118);border:1px solid var(--border);padding:12px;border-radius:10px;z-index:40;box-shadow:var(--shadow);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong>Search Results</strong>
+        <button class="btn-ghost" onclick="closeSearchResults()">Close</button>
+      </div>
+      <div id="search-results-list"></div>
+    </div>
 
   <div class="input-wrap">
     <div class="input-box">
@@ -330,6 +365,9 @@ function renderMessages(){
   conv.messages.forEach(msg=>{
     const div=document.createElement("div");
     div.className="message "+(msg.role==="assistant"?"ai":"user");
+    // Accessibility: make each message an article with an accessible label
+    div.setAttribute('role','article');
+    div.setAttribute('aria-label', `${msg.role} message at ${new Date(msg.timestamp).toLocaleString()}`);
     if (msg.role === "assistant") {
       div.innerHTML = `
         <div class="message-header">
@@ -400,31 +438,8 @@ async function sendMessage(){
   try {
     const streamEnabled = document.getElementById("stream-toggle").checked;
     const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model, stream: streamEnabled && conv.provider === "huggingface" };
-    // --- Vanilla backend call ---
-    setLoading(true);
-    try {
-        const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model };
 
-        const response = await fetch("http://localhost:3001/sendmessage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        console.log("Backend returned:", data);
-
-        if (data && data.message) {
-            const respProvider = data.provider || conv.provider;
-            const respModel = data.model || conv.model;
-            conv.messages.push(createMessage("assistant", data.message, respProvider, respModel));
-        } else if (data && data.error) {
-            conv.messages.push(createMessage("assistant", `AI error: ${data.error}`));
-        } else {
-            conv.messages.push(createMessage("assistant", "No response from backend."));
-        }
-
-    const response = await fetch("http://localhost:3001/sendmessage", {
+    const response = await fetch("http://localhost:3000/sendmessage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -440,27 +455,67 @@ async function sendMessage(){
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
       let done = false;
-      while (!done) {
-        const result = await reader.read();
-        done = result.done;
-        if (result.value) {
-          buffer += decoder.decode(result.value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const data = trimmed.slice(5).trim();
-            if (data === "[DONE]") { done = true; break; }
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed?.error) { assistantMsg.content += `\n\n**Error:** ${parsed.error}`; continue; }
-              const delta = parsed?.choices?.[0]?.delta?.content || parsed?.choices?.[0]?.message?.content || "";
-              if (delta) assistantMsg.content += delta;
-            } catch (e) {}
+      try {
+        while (!done) {
+          const { value, done: readDone } = await reader.read();
+          done = readDone;
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed.startsWith("data:")) continue;
+              const data = trimmed.slice(5).trim();
+              if (data === "[DONE]") { done = true; break; }
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed?.error) { assistantMsg.content += `\n\n**Error:** ${parsed.error}`; continue; }
+                const delta = parsed?.delta || parsed?.choices?.[0]?.delta?.content || parsed?.choices?.[0]?.message?.content || "";
+                if (delta) assistantMsg.content += delta;
+              } catch (e) {
+                assistantMsg.content += data;
+              }
+            }
+            renderMessages();
           }
-          renderMessages();
         }
+      } catch (streamErr) {
+        console.error('Stream error, attempting one retry:', streamErr);
+        // Exponential backoff retry with jitter
+        const maxRetries = 3;
+        let attempt = 0;
+        let succeeded = false;
+        while(attempt < maxRetries && !succeeded){
+          attempt++;
+          const delay = Math.pow(2, attempt) * 250; // 500ms, 1s, 2s
+          const jitter = Math.floor(Math.random() * 250);
+          await new Promise(r => setTimeout(r, delay + jitter));
+          try {
+            const retryResp = await fetch("http://localhost:3000/sendmessage", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if(retryResp.ok){
+              const ct = retryResp.headers.get('content-type') || '';
+              if(ct.includes('text/event-stream')){
+                // If the server returned a new stream, fall back to fetching a non-stream JSON summary
+                const retryData = await retryResp.json().catch(()=>null);
+                if (retryData && retryData.message) assistantMsg.content += retryData.message;
+              } else {
+                const retryData = await retryResp.json();
+                if (retryData && retryData.message) assistantMsg.content += retryData.message;
+              }
+              succeeded = true;
+              break;
+            }
+          } catch (retryErr) {
+            // continue loop
+          }
+        }
+        if(!succeeded){ assistantMsg.content += `\n\n[Stream failed after ${maxRetries} retries]`; }
+        renderMessages();
       }
     } else {
       const data = await response.json();
@@ -530,6 +585,139 @@ render();
 document.querySelector('#user-input').addEventListener('keypress', function(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
 });
+
+// --- Export & Search helpers ---
+function getAuthHeaders(){
+  const headers = { 'Content-Type': 'application/json' };
+  try{
+    const token = localStorage.getItem('auth_token');
+    if(token) headers['Authorization'] = `Bearer ${token}`;
+  }catch(e){}
+  return headers;
+}
+
+function toggleExportMenu(){
+  const menu = document.getElementById('export-menu');
+  const btn = document.getElementById('export-btn');
+  if(!menu) return;
+  const open = menu.style.display !== 'block';
+  menu.style.display = open ? 'block' : 'none';
+  if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+const exportBtnEl = document.getElementById('export-btn');
+if(exportBtnEl) exportBtnEl.addEventListener('click', (e)=>{ e.stopPropagation(); toggleExportMenu(); });
+document.addEventListener('click', ()=>{ const m=document.getElementById('export-menu'); if(m) { m.style.display='none'; const btn=document.getElementById('export-btn'); if(btn) btn.setAttribute('aria-expanded','false'); } });
+
+async function exportCurrentSession(format){
+  const conv = appState.conversations.find(c=>c.id===appState.activeConversationId);
+  if(!conv){ alert('No active conversation to export'); return; }
+  const sid = conv.id;
+  const url = `/export?sessionId=${encodeURIComponent(sid)}&format=${encodeURIComponent(format)}`;
+  try{
+    const res = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
+    if(!res.ok){ const err = await res.json().catch(()=>({ error: 'Export failed' })); return alert('Export failed: '+(err.error||res.status)); }
+    const ct = res.headers.get('content-type')||'';
+    const blob = await res.blob();
+    const ext = format === 'md' ? 'md' : format === 'pdf' ? 'pdf' : 'json';
+    const filename = `${sid}.${ext}`;
+    const urlObj = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = urlObj; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(urlObj);
+  }catch(err){ console.error('Export failed', err); alert('Export failed: '+(err && err.message)); }
+}
+
+async function performSearch(){
+  const q = document.getElementById('search-input').value.trim();
+  if(!q) return alert('Enter search query');
+  try{
+    const res = await fetch(`/search?q=${encodeURIComponent(q)}`, { method: 'GET', headers: getAuthHeaders() });
+    if(!res.ok){ const err = await res.json().catch(()=>({ error: 'Search failed' })); return alert('Search error: '+(err.error||res.status)); }
+    const data = await res.json();
+    renderSearchResults(data.results || []);
+  }catch(err){ console.error('Search failed', err); alert('Search failed: '+(err && err.message)); }
+}
+
+function renderSearchResults(results){
+  const panel = document.getElementById('search-results');
+  const list = document.getElementById('search-results-list');
+  list.innerHTML = '';
+  if(!results || results.length===0){ list.innerHTML = '<div style="color:var(--muted)">No results</div>'; }
+  results.forEach(r=>{
+    const el = document.createElement('div');
+    el.style.padding='8px'; el.style.borderBottom='1px solid var(--border)'; el.style.cursor='pointer';
+    el.innerHTML = `<div style="font-weight:700;color:var(--text)">${r.sessionId}</div><div style="color:var(--muted);font-size:.9rem;margin-top:6px">${r.snippet||''}</div>`;
+    el.onclick = ()=>{ openSessionFromSearch(r.sessionId, r.message && r.message.content); };
+    list.appendChild(el);
+  });
+  panel.style.display = 'block';
+}
+
+function closeSearchResults(){ document.getElementById('search-results').style.display='none'; }
+
+function openSessionFromSearch(sessionId, snippet){
+  let conv = appState.conversations.find(c=>c.id===sessionId);
+  if(!conv){ // create a thin conversation placeholder and load history from backend
+    conv = { id: sessionId, title: 'Imported', provider: 'huggingface', model: '', messages: [], createdAt: Date.now() };
+    appState.conversations.push(conv);
+    // attempt to fetch full history
+    fetch(`/history?sessionId=${encodeURIComponent(sessionId)}`, { method: 'GET', headers: getAuthHeaders() }).then(r=>r.json().then(data=>{
+      if(data && data.messages) conv.messages = data.messages; saveState(); render();
+    }).catch(()=>{})).catch(()=>{});
+  }
+  appState.activeConversationId = sessionId; saveState(); render(); closeSearchResults();
+  if(snippet){ setTimeout(()=>{ alert('Snippet:\n'+String(snippet).slice(0,800)); }, 80); }
+}
+
+// Accessibility: keyboard handlers
+document.addEventListener('keydown', (e)=>{
+  // Close menus on Escape
+  if(e.key === 'Escape'){
+    const m = document.getElementById('export-menu'); if(m) { m.style.display='none'; }
+    const panel = document.getElementById('search-results'); if(panel) panel.style.display='none';
+    const exportBtn = document.getElementById('export-btn'); if(exportBtn) exportBtn.setAttribute('aria-expanded','false');
+  }
+});
+
+// Allow Enter in search input to trigger search
+const searchInputEl = document.getElementById('search-input');
+if(searchInputEl){ searchInputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); performSearch(); } }); }
+</script>
+
+<!-- Auth token modal -->
+<div id="auth-modal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(2,6,10,0.6);align-items:center;justify-content:center;z-index:60;">
+  <div style="background:var(--panel);border:1px solid var(--border);padding:18px;border-radius:12px;width:420px;max-width:92%;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <strong>Set Auth Token</strong>
+      <button class="btn-ghost" onclick="closeAuthModal()">Close</button>
+    </div>
+    <p style="color:var(--muted);font-size:.95rem;margin-bottom:8px">Paste a JWT Bearer token to use for protected API endpoints.</p>
+    <textarea id="auth-token-input" rows="3" style="width:100%;background:var(--panel-2);border:1px solid var(--border);padding:10px;border-radius:8px;color:var(--text);"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+      <button class="btn-ghost" onclick="clearAuthToken()">Clear</button>
+      <button class="btn-ghost" onclick="saveAuthToken()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openAuthModal(){
+    const modal = document.getElementById('auth-modal');
+    const input = document.getElementById('auth-token-input');
+    if(!modal || !input) return;
+    input.value = localStorage.getItem('auth_token') || '';
+    modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false'); input.focus();
+  }
+  function closeAuthModal(){ const modal=document.getElementById('auth-modal'); if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } }
+  function saveAuthToken(){ const v=document.getElementById('auth-token-input').value.trim(); if(v) localStorage.setItem('auth_token', v); else localStorage.removeItem('auth_token'); closeAuthModal(); renderAuthStatus(); }
+  function clearAuthToken(){ localStorage.removeItem('auth_token'); document.getElementById('auth-token-input').value=''; renderAuthStatus(); }
+  function renderAuthStatus(){ const btn = document.getElementById('auth-btn'); const token = localStorage.getItem('auth_token'); if(btn){ btn.textContent = token ? 'Auth ●' : 'Auth'; btn.title = token ? 'Auth token set' : 'No auth token'; } }
+  document.addEventListener('DOMContentLoaded', renderAuthStatus);
+  // Also call immediately in case script loaded after DOMContent
+  renderAuthStatus();
+</script>
+<script>
+  function openAnalytics(){
+    window.open('/analytics.html','_blank');
+  }
 </script>
 
 </body>
