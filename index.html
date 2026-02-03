@@ -3,122 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Unified Workspace</title>
+<title>Unified AI Workspace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
 :root{
-  --bg-1:#0b0f14;
-  --bg-2:#0f1720;
-  --panel:#141b25;
-  --panel-2:#10161f;
-  --panel-3:#0c121a;
-  --border:#1e2a3a;
-  --text:#e8eef6;
-  --muted:#9aa8ba;
-  --accent:#14b8a6;
-  --accent-2:#f59e0b;
-  --danger:#f87171;
-  --shadow:0 20px 60px rgba(0,0,0,.35);
+  --bg:#0a0e14;
+  --bg-2:#0d121a;
+  --panel:#121a24;
+  --panel-2:#0f1722;
+  --panel-3:#0b1119;
+  --border:#1c2736;
+  --text:#eaf0f6;
+  --muted:#94a3b8;
+  --accent:#f472b6;
+  --accent-2:#38bdf8;
+  --shadow:0 22px 60px rgba(0,0,0,.4);
 }
-/* Accessibility helpers */
-.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-
-/* Focus styles for keyboard users */
-:focus-visible{outline:3px solid rgba(20,184,166,0.25);outline-offset:3px;border-radius:6px}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
-  font-family:"Space Grotesk",system-ui,sans-serif;
+  font-family:"Manrope",system-ui,sans-serif;
   color:var(--text);
   background:
-    radial-gradient(1200px 600px at 10% -10%, #113249 0%, transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, #1b2b3d 0%, transparent 55%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    radial-gradient(720px 420px at 10% -10%, #1d2840 0%, transparent 60%),
+    radial-gradient(980px 520px at 95% 0%, #2b1b36 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
   height:100vh;
   display:flex;
   overflow:hidden;
-}
-/* Hide scrollbars but keep scroll */
-*{
-  scrollbar-width:none;
-}
-*::-webkit-scrollbar{
-  width:0;
-  height:0;
 }
 body::before{
   content:"";
   position:fixed;
   inset:0;
   background-image:radial-gradient(#ffffff10 1px, transparent 1px);
-  background-size:24px 24px;
-  opacity:.15;
+  background-size:26px 26px;
+  opacity:.14;
   pointer-events:none;
 }
+*{scrollbar-width:none;}
+*::-webkit-scrollbar{width:0;height:0;}
 
 aside{
-  width:280px;
-  background:linear-gradient(180deg, #0c121a, #0b1017);
+  width:300px;
+  background:linear-gradient(180deg, #0f151f, #0b1017);
   border-right:1px solid var(--border);
   display:flex;
   flex-direction:column;
-  padding:20px 16px;
-  gap:16px;
+  padding:18px 14px;
+  gap:14px;
+  transition:width .2s ease;
 }
+.sidebar-collapsed aside{width:76px;}
 .brand{
   display:flex;
   align-items:center;
   gap:10px;
   font-weight:700;
-  letter-spacing:.2px;
-  font-size:1.1rem;
+  letter-spacing:.3px;
 }
-.brand-dot{
-  width:12px;height:12px;border-radius:50%;
+.brand-badge{
+  width:14px;height:14px;border-radius:5px;
   background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  box-shadow:0 0 18px rgba(20,184,166,.6);
+  box-shadow:0 0 16px rgba(34,211,238,.45);
 }
+.brand-text{font-size:1rem;}
+.sidebar-collapsed .brand-text{display:none;}
 .btn-new{
   background:var(--panel);
   border:1px solid var(--border);
   color:var(--text);
   padding:10px 12px;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
   font-weight:600;
   transition:transform .15s ease, background .2s ease;
 }
-.btn-new:hover{background:#172231;transform:translateY(-1px);}
+.btn-new:hover{background:#17212f;transform:translateY(-1px);}
+.sidebar-collapsed .btn-new{font-size:0; padding:10px; width:44px; align-self:center;}
+.sidebar-collapsed .btn-new::before{content:"+";font-size:1rem;}
+.history-title{
+  color:var(--muted);
+  font-size:.8rem;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+}
+.sidebar-collapsed .history-title{display:none;}
 .history-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;}
 .history-item{
   padding:10px 12px;
   border-radius:10px;
   color:var(--muted);
   cursor:pointer;
-  background:transparent;
   border:1px solid transparent;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
 }
-.history-item:hover{background:#121a26;border-color:#1f2b3c;color:var(--text);}
-.history-item.active{background:#152131;border-color:#243347;color:var(--text);}
+.history-title-text{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-actions{display:flex;gap:6px;opacity:0;transition:opacity .15s ease;}
+.history-item:hover .history-actions{opacity:1;}
+.history-btn{
+  background:#141b26;border:1px solid var(--border);color:var(--muted);
+  width:24px;height:24px;border-radius:6px;font-size:.7rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.history-btn:hover{color:var(--text);border-color:#2a3b52;}
+.history-input{
+  flex:1;
+  background:#0f151e;
+  border:1px solid #2a3b52;
+  color:var(--text);
+  padding:6px 8px;
+  border-radius:8px;
+  font-size:.85rem;
+}
+.history-item:hover{background:#151e2a;border-color:#243246;color:var(--text);}
+.history-item.active{background:#182231;border-color:#2a3b52;color:var(--text);}
+.sidebar-collapsed .history-item{font-size:0;padding:10px;width:44px;align-self:center;}
+.sidebar-collapsed .history-item::before{content:"•";font-size:1rem;}
+.sidebar-collapsed .history-actions{display:none;}
 .sidebar-footer{
   border-top:1px solid var(--border);
-  padding-top:14px;
+  padding-top:12px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   color:var(--muted);
   font-size:.85rem;
 }
+.sidebar-collapsed .sidebar-footer span{display:none;}
 .profile-pic{
   width:32px;height:32px;border-radius:10px;
   background:linear-gradient(135deg,#2f3b52,#1d2736);
 }
-.profile-pic[role="img"]{display:inline-block}
 
 main{
   flex:1;
@@ -127,15 +147,24 @@ main{
   position:relative;
 }
 .topbar{
-  height:70px;
+  height:72px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 24px;
+  padding:0 22px;
   border-bottom:1px solid var(--border);
-  background:rgba(12,18,26,.6);
-  backdrop-filter:blur(8px);
+  background:rgba(12,17,24,.7);
+  backdrop-filter:blur(10px);
 }
+.left-controls{display:flex;align-items:center;gap:10px;}
+.btn-collapse{
+  width:38px;height:38px;border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--panel);
+  color:var(--muted);
+  cursor:pointer;
+}
+.btn-collapse:hover{color:var(--text);border-color:#2a3b52;}
 .selectors{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 select{
   background:var(--panel);
@@ -147,7 +176,7 @@ select{
   outline:none;
   cursor:pointer;
 }
-.toggles{display:flex;gap:16px;align-items:center;color:var(--muted);font-size:.85rem;}
+.toggles{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:.85rem;}
 .toggle{
   display:flex;align-items:center;gap:8px;
   background:var(--panel);
@@ -164,13 +193,20 @@ select{
 #chat-container{
   flex:1;
   overflow:auto;
-  padding:28px 10%;
+  padding:26px 9%;
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:16px;
+}
+.empty{
+  margin:auto;
+  text-align:center;
+  color:var(--muted);
+  max-width:520px;
+  line-height:1.6;
 }
 .message{
-  max-width:900px;
+  max-width:920px;
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:16px;
@@ -179,8 +215,8 @@ select{
 }
 .message.user{
   align-self:flex-end;
-  background:linear-gradient(135deg,#1a2736,#121b27);
-  border-color:#2a3b52;
+  background:linear-gradient(135deg,#1c2432,#131b28);
+  border-color:#2a3a50;
 }
 .message.ai{align-self:flex-start;background:var(--panel-2);}
 .message-header{
@@ -191,12 +227,28 @@ select{
 }
 .msg-actions{display:flex;gap:8px;}
 .msg-action{
-  background:var(--panel-3);
+  background:#141b26;
   border:1px solid var(--border);
   color:var(--muted);
   padding:4px 8px;border-radius:8px;font-size:.72rem;cursor:pointer;
 }
 .msg-action:hover{color:var(--text);border-color:#2a3b52;}
+.msg-footer{
+  margin-top:10px;
+  display:flex;
+  justify-content:flex-end;
+}
+.voice-btn{
+  background:#141b26;border:1px solid var(--border);color:var(--muted);
+  width:30px;height:30px;border-radius:10px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.9rem;
+}
+.voice-btn:hover{color:var(--text);border-color:#2a3b52;}
+.voice-select{
+  background:#141b26;border:1px solid var(--border);color:var(--muted);
+  padding:4px 6px;border-radius:8px;font-size:.7rem;cursor:pointer;
+}
 
 .message-content{color:var(--text);font-size:1rem;line-height:1.7;}
 .message-content p{margin:0 0 12px 0;}
@@ -205,7 +257,7 @@ select{
 .message-content code{
   background:#0f141c;border:1px solid #202a3a;
   padding:2px 6px;border-radius:6px;
-  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
   font-size:.95em;
 }
 .message-content pre{
@@ -216,7 +268,7 @@ select{
 }
 .message-content pre code{
   display:block;background:transparent;padding:0;white-space:pre;
-  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;
 }
 .code-copy{
   position:absolute;top:10px;right:10px;
@@ -226,45 +278,78 @@ select{
 .code-copy:hover{background:#223149;}
 
 .input-wrap{
-  padding:18px 10% 28px;
-  background:linear-gradient(180deg, transparent, rgba(11,15,20,.9) 30%);
+  padding:16px 9% 26px;
+  background:linear-gradient(180deg, transparent, rgba(10,14,20,.92) 30%);
 }
 .input-box{
   background:var(--panel);
   border:1px solid var(--border);
   border-radius:14px;
-  padding:12px 14px;
+  padding:10px 14px;
   display:flex;
-  align-items:flex-end;
+  align-items:stretch;
   gap:12px;
   box-shadow:var(--shadow);
+  min-height:56px;
 }
 textarea{
   flex:1;
   background:transparent;border:none;color:var(--text);
   resize:none;font-family:inherit;font-size:1rem;outline:none;max-height:220px;
+  padding:10px 0;
+  line-height:1.5;
 }
 .btn-send{
-  background:linear-gradient(135deg,var(--accent),#0ea5a5);
-  color:#041016;border:none;width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#0a0d11;border:none;width:38px;height:38px;border-radius:10px;
   cursor:pointer;font-weight:700;
+  align-self:center;
 }
 .btn-send:disabled{opacity:.6;cursor:not-allowed;}
 .typing-indicator{color:var(--muted);font-size:.85rem;}
 
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);
+  display:none;align-items:center;justify-content:center;
+  z-index:50;
+}
+.modal{
+  width:min(420px, 90vw);
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.modal h3{margin:0 0 8px 0;font-size:1.1rem;}
+.modal p{margin:0 0 16px 0;color:var(--muted);}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.btn-secondary{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:8px 12px;border-radius:10px;cursor:pointer;
+}
+.btn-secondary:hover{color:var(--text);border-color:#2a3b52;}
+.btn-danger{
+  background:linear-gradient(135deg,#f87171,#fb7185);
+  color:#0b0e12;border:none;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700;
+}
+
 @media (max-width: 980px){
   aside{display:none;}
-  #chat-container{padding:24px 6%;}
-  .input-wrap{padding:16px 6% 22px;}
+  #chat-container{padding:22px 6%;}
+  .input-wrap{padding:14px 6% 20px;}
 }
 </style>
 </head>
 <body>
-  <a href="#chat-container" class="sr-only">Skip to chat</a>
 
 <aside>
-  <div class="brand"><span class="brand-dot"></span>Unified AI</div>
-  <button class="btn-new" onclick="newChat()">+ New Chat</button>
+  <div class="brand">
+    <span class="brand-badge"></span>
+    <span class="brand-text">Unified AI</span>
+  </div>
+  <button class="btn-new" onclick="newChat()">New Chat</button>
+  <div class="history-title">History</div>
   <div class="history-list chat-list"></div>
   <div class="sidebar-footer">
     <span>Workspace</span>
@@ -274,51 +359,25 @@ textarea{
 
 <main>
   <div class="topbar">
-      <div style="display:flex;align-items:center;gap:8px;">
-      <label for="provider-select" class="sr-only">Provider</label>
-      <select id="provider-select" aria-label="Provider selection">
-        <option value="gpt">ChatGPT</option>
-        <option value="claude">Claude</option>
-        <option value="gemini">Gemini</option>
-        <option value="huggingface" selected>Hugging Face</option>
-      </select>
-      <label for="model-select" class="sr-only">Model</label>
-      <select id="model-select" aria-label="Model selection"></select>
+    <div class="left-controls">
+      <button class="btn-collapse" id="collapse-btn">☰</button>
+      <div class="selectors">
+        <select id="provider-select">
+          <option value="gpt">ChatGPT</option>
+          <option value="claude">Claude</option>
+          <option value="gemini">Gemini</option>
+          <option value="huggingface" selected>Hugging Face</option>
+        </select>
+        <select id="model-select"></select>
+      </div>
     </div>
     <div class="toggles">
       <button class="btn-ghost" onclick="clearChat()">Clear</button>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button id="auth-btn" class="btn-ghost" onclick="openAuthModal()" aria-haspopup="dialog">Auth</button>
-        <label for="search-input" class="sr-only">Search conversations</label>
-        <input id="search-input" aria-label="Search conversations" placeholder="Search conversations" style="background:var(--panel);border:1px solid var(--border);color:var(--muted);padding:8px 10px;border-radius:8px;width:220px;" />
-        <button class="btn-ghost" onclick="performSearch()">Search</button>
-        <div style="position:relative;">
-          <button class="btn-ghost" id="export-btn" aria-haspopup="true" aria-expanded="false">Export ▾</button>
-          <div id="export-menu" style="display:none;position:absolute;right:0;top:40px;background:var(--panel);border:1px solid var(--border);padding:6px;border-radius:8px;width:140px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <button class="btn-ghost" onclick="exportCurrentSession('json')">Export JSON</button>
-              <button class="btn-ghost" onclick="exportCurrentSession('md')">Export Markdown</button>
-              <button class="btn-ghost" onclick="exportCurrentSession('pdf')">Export PDF</button>
-            </div>
-          </div>
-        </div>
-        <button id="analytics-btn" class="btn-ghost" onclick="openAnalytics()">Analytics</button>
-      </div>
-      <label class="toggle">Memory <input type="checkbox" checked></label>
       <label class="toggle">Stream <input id="stream-toggle" type="checkbox" checked></label>
     </div>
   </div>
 
-  <div id="chat-container" class="chat-messages" role="log" aria-live="polite" aria-atomic="false"></div>
-
-    <!-- Search results panel -->
-    <div id="search-results" style="position:fixed;right:20px;top:90px;width:360px;max-height:60vh;overflow:auto;display:none;background:linear-gradient(180deg,#081018,#0b1118);border:1px solid var(--border);padding:12px;border-radius:10px;z-index:40;box-shadow:var(--shadow);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong>Search Results</strong>
-        <button class="btn-ghost" onclick="closeSearchResults()">Close</button>
-      </div>
-      <div id="search-results-list"></div>
-    </div>
+  <div id="chat-container" class="chat-messages"></div>
 
   <div class="input-wrap">
     <div class="input-box">
@@ -329,7 +388,19 @@ textarea{
   </div>
 </main>
 
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">Delete chat?</h3>
+    <p id="confirm-message">This will remove the conversation and its messages.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="confirm-cancel">Cancel</button>
+      <button class="btn-danger" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script>
+const API_BASE = "http://localhost:3001";
 const models = {
   gpt: ['GPT-4o','GPT-4 Turbo','GPT-3.5'],
   claude: ['Claude 3.5 Sonnet','Claude 3 Opus','Claude 3 Haiku'],
@@ -338,12 +409,48 @@ const models = {
 };
 
 let appState = { conversations:[], activeConversationId:null };
+let uiState = { sidebarCollapsed:false, streamEnabled:true };
+let confirmResolve = null;
 
-function saveState(){ localStorage.setItem("ai_workspace_state", JSON.stringify(appState)); }
-function loadState(){ const saved = localStorage.getItem("ai_workspace_state"); if(saved) appState = JSON.parse(saved); }
+function saveUi(){ localStorage.setItem("ui_state", JSON.stringify(uiState)); }
+function loadUi(){
+  const saved = localStorage.getItem("ui_state");
+  if(saved) uiState = { ...uiState, ...JSON.parse(saved) };
+}
 
-function createConversation(provider, model){ return { id:crypto.randomUUID(), title:"New Chat", provider, model, messages:[], createdAt:Date.now() }; }
+async function apiGet(path){
+  const res = await fetch(`${API_BASE}${path}`);
+  return res.json();
+}
+async function apiPost(path, payload){
+  const res = await fetch(`${API_BASE}${path}`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload || {})
+  });
+  return res.json();
+}
+
 function createMessage(role, content, provider=null, model=null){ return { role, content, provider, model, timestamp:Date.now() }; }
+
+async function loadConversations(){
+  const data = await apiGet("/conversations");
+  appState.conversations = data.conversations || [];
+  if (!appState.activeConversationId && appState.conversations.length) {
+    appState.activeConversationId = appState.conversations[0].id;
+    await loadConversation(appState.activeConversationId);
+  }
+}
+
+async function loadConversation(id){
+  const data = await apiGet(`/conversations/${id}`);
+  const conv = appState.conversations.find(c => c.id === id);
+  if (conv) {
+    conv.messages = data.messages || [];
+  }
+  appState.activeConversationId = id;
+  render();
+}
 
 function renderConversationList(){
   const list = document.querySelector(".chat-list");
@@ -351,8 +458,70 @@ function renderConversationList(){
   appState.conversations.forEach(conv=>{
     const div=document.createElement("div");
     div.className="history-item"+(conv.id===appState.activeConversationId?" active":"");
-    div.textContent=conv.title;
-    div.onclick=()=>{ appState.activeConversationId=conv.id; saveState(); render(); };
+    div.dataset.id = conv.id;
+    const title = conv.title || "New Chat";
+    div.innerHTML = `
+      ${conv.isEditing
+        ? `<input class="history-input" value="${title.replace(/"/g,'&quot;')}" />`
+        : `<span class="history-title-text">${title}</span>`}
+      <span class="history-actions">
+        <button class="history-btn" data-action="rename" title="Rename">✎</button>
+        <button class="history-btn" data-action="delete" title="Delete">🗑</button>
+      </span>
+    `;
+    div.title=conv.title || "New Chat";
+    div.onclick=(e)=>{
+      const btn = e.target.closest(".history-btn");
+      if (btn) return;
+      if (conv.isEditing) return;
+      loadConversation(conv.id);
+    };
+    div.querySelector('[data-action="rename"]').onclick = (e) => {
+      e.stopPropagation();
+      conv.isEditing = true;
+      renderConversationList();
+      const row = document.querySelector(`.history-item[data-id="${conv.id}"]`);
+      const input = row ? row.querySelector(".history-input") : null;
+      if (input) {
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+        input.onclick = (ev) => ev.stopPropagation();
+        let saved = false;
+        const save = () => {
+          if (saved) return;
+          saved = true;
+          const next = input.value.trim() || "New Chat";
+          conv.title = next;
+          conv.isEditing = false;
+          renderConversationList();
+          apiPost(`/conversations/${conv.id}/rename`, { title: next }).catch(() => {});
+        };
+        const cancel = () => { conv.isEditing = false; renderConversationList(); };
+        input.onkeydown = (ev) => {
+          if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); save(); }
+          if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); cancel(); }
+        };
+        input.onblur = () => { if (conv.isEditing) save(); };
+      }
+    };
+    div.querySelector('[data-action="delete"]').onclick = async (e) => {
+      e.stopPropagation();
+      const ok = await showConfirm("Delete chat?", "This will remove the conversation and its messages.");
+      if (!ok) return;
+      const resp = await apiPost(`/conversations/${conv.id}/delete`, {});
+      if (resp && resp.error) {
+        showConfirm("Delete failed", resp.error, false);
+        return;
+      }
+      appState.conversations = appState.conversations.filter(c => c.id !== conv.id);
+      if (appState.activeConversationId === conv.id) {
+        appState.activeConversationId = appState.conversations[0]?.id || null;
+        if (appState.activeConversationId) {
+          await loadConversation(appState.activeConversationId);
+        }
+      }
+      renderConversationList();
+      renderMessages();
+    };
     list.appendChild(div);
   });
 }
@@ -361,13 +530,13 @@ function renderMessages(){
   const chat=document.querySelector(".chat-messages");
   chat.innerHTML="";
   const conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
-  if(!conv) return;
-  conv.messages.forEach(msg=>{
+  if(!conv){
+    chat.innerHTML = `<div class="empty">Start a new chat to see conversation history here.</div>`;
+    return;
+  }
+  (conv.messages || []).forEach(msg=>{
     const div=document.createElement("div");
     div.className="message "+(msg.role==="assistant"?"ai":"user");
-    // Accessibility: make each message an article with an accessible label
-    div.setAttribute('role','article');
-    div.setAttribute('aria-label', `${msg.role} message at ${new Date(msg.timestamp).toLocaleString()}`);
     if (msg.role === "assistant") {
       div.innerHTML = `
         <div class="message-header">
@@ -377,10 +546,26 @@ function renderMessages(){
           </div>
         </div>
         <div class="message-content">${renderMarkdown(msg.content || "")}</div>
+        <div class="msg-footer">
+          <button class="voice-btn" data-speak="true" title="Read aloud">🔊</button>
+          <button class="voice-btn" data-stop="true" title="Stop">⏹</button>
+          <select class="voice-select" data-voice="true"></select>
+        </div>
       `;
       div.querySelector('[data-copy="true"]').onclick = () => {
         navigator.clipboard.writeText(msg.content || "");
       };
+      div.querySelector('[data-speak="true"]').onclick = () => {
+        const select = div.querySelector('[data-voice="true"]');
+        speakText(msg.content || "", select ? select.value : "");
+      };
+      div.querySelector('[data-stop="true"]').onclick = () => {
+        stopSpeak();
+      };
+      const voiceSelect = div.querySelector('[data-voice="true"]');
+      if (voiceSelect) {
+        populateVoiceSelect(voiceSelect);
+      }
       enhanceCodeBlocks(div);
     } else {
       div.textContent = msg.content || "";
@@ -407,23 +592,9 @@ async function sendMessage(){
   const input=document.getElementById('user-input');
   const text=input.value.trim();
   if(!text) return;
+  input.value = "";
   const provider=document.getElementById('provider-select').value;
   const model=document.getElementById('model-select').value;
-  let conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
-  if(!conv){
-    conv=createConversation(provider,model);
-    appState.conversations.push(conv);
-    appState.activeConversationId=conv.id;
-  } else {
-    conv.provider = provider;
-    conv.model = model;
-  }
-
-  conv.messages.push(createMessage("user", text, conv.provider, conv.model));
-  conv.title=text.slice(0,30);
-  render();
-  saveState();
-  input.value="";
 
   const sendBtn = document.getElementById('send-btn');
   const typingEl = document.getElementById('typing-indicator');
@@ -435,11 +606,41 @@ async function sendMessage(){
   };
 
   setLoading(true);
+  let conv = null;
   try {
+    conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
+    if(!conv){
+      const created = await apiPost("/conversations", { title:"New Chat", provider, model });
+      conv = { ...created, messages:[] };
+      appState.conversations.unshift(conv);
+      appState.activeConversationId = conv.id;
+    } else {
+      conv.provider = provider;
+      conv.model = model;
+    }
+
+    const userMsg = createMessage("user", text, conv.provider, conv.model);
+    conv.messages.push(userMsg);
+    if (!conv.title || conv.title === "New Chat") {
+      const title = text.slice(0,30);
+      conv.title = title;
+      await apiPost(`/conversations/${conv.id}/rename`, { title });
+    }
+    render();
+
+    await apiPost(`/conversations/${conv.id}/messages`, {
+      role: "user",
+      content: text,
+      provider: conv.provider,
+      model: conv.model,
+      timestamp: userMsg.timestamp,
+      title: conv.title
+    });
+
     const streamEnabled = document.getElementById("stream-toggle").checked;
     const payload = { conversationId: conv.id, text, provider: conv.provider, model: conv.model, stream: streamEnabled && conv.provider === "huggingface" };
 
-    const response = await fetch("http://localhost:3000/sendmessage", {
+    const response = await fetch(`${API_BASE}/sendmessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -455,106 +656,97 @@ async function sendMessage(){
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
       let done = false;
-      try {
-        while (!done) {
-          const { value, done: readDone } = await reader.read();
-          done = readDone;
-          if (value) {
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed.startsWith("data:")) continue;
-              const data = trimmed.slice(5).trim();
-              if (data === "[DONE]") { done = true; break; }
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed?.error) { assistantMsg.content += `\n\n**Error:** ${parsed.error}`; continue; }
-                const delta = parsed?.delta || parsed?.choices?.[0]?.delta?.content || parsed?.choices?.[0]?.message?.content || "";
-                if (delta) assistantMsg.content += delta;
-              } catch (e) {
-                assistantMsg.content += data;
-              }
-            }
-            renderMessages();
+      while (!done) {
+        const result = await reader.read();
+        done = result.done;
+        if (result.value) {
+          buffer += decoder.decode(result.value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const data = trimmed.slice(5).trim();
+            if (data === "[DONE]") { done = true; break; }
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed?.error) { assistantMsg.content += `\n\n**Error:** ${parsed.error}`; continue; }
+              const delta = parsed?.choices?.[0]?.delta?.content || parsed?.choices?.[0]?.message?.content || "";
+              if (delta) assistantMsg.content += delta;
+            } catch (e) {}
           }
+          renderMessages();
         }
-      } catch (streamErr) {
-        console.error('Stream error, attempting one retry:', streamErr);
-        // Exponential backoff retry with jitter
-        const maxRetries = 3;
-        let attempt = 0;
-        let succeeded = false;
-        while(attempt < maxRetries && !succeeded){
-          attempt++;
-          const delay = Math.pow(2, attempt) * 250; // 500ms, 1s, 2s
-          const jitter = Math.floor(Math.random() * 250);
-          await new Promise(r => setTimeout(r, delay + jitter));
-          try {
-            const retryResp = await fetch("http://localhost:3000/sendmessage", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            });
-            if(retryResp.ok){
-              const ct = retryResp.headers.get('content-type') || '';
-              if(ct.includes('text/event-stream')){
-                // If the server returned a new stream, fall back to fetching a non-stream JSON summary
-                const retryData = await retryResp.json().catch(()=>null);
-                if (retryData && retryData.message) assistantMsg.content += retryData.message;
-              } else {
-                const retryData = await retryResp.json();
-                if (retryData && retryData.message) assistantMsg.content += retryData.message;
-              }
-              succeeded = true;
-              break;
-            }
-          } catch (retryErr) {
-            // continue loop
-          }
+      }
+      await apiPost(`/conversations/${conv.id}/messages`, {
+        role: "assistant",
+        content: assistantMsg.content,
+        provider: conv.provider,
+        model: conv.model,
+        timestamp: assistantMsg.timestamp
+      });
+      if (!conv.autoNamed && (conv.title === "New Chat" || !conv.title)) {
+        const resp = await apiPost(`/conversations/${conv.id}/autoname`, {});
+        if (resp && resp.title) {
+          conv.title = resp.title;
+          conv.autoNamed = true;
+          renderConversationList();
         }
-        if(!succeeded){ assistantMsg.content += `\n\n[Stream failed after ${maxRetries} retries]`; }
-        renderMessages();
       }
     } else {
       const data = await response.json();
       if (data && data.message) {
         const respProvider = data.provider || conv.provider;
         const respModel = data.model || conv.model;
-        conv.messages.push(createMessage("assistant", data.message, respProvider, respModel));
+        const assistantMsg = createMessage("assistant", data.message, respProvider, respModel);
+        conv.messages.push(assistantMsg);
+        await apiPost(`/conversations/${conv.id}/messages`, {
+          role: "assistant",
+          content: data.message,
+          provider: respProvider,
+          model: respModel,
+          timestamp: assistantMsg.timestamp
+        });
+        if (!conv.autoNamed && (conv.title === "New Chat" || !conv.title)) {
+          const resp = await apiPost(`/conversations/${conv.id}/autoname`, {});
+          if (resp && resp.title) {
+            conv.title = resp.title;
+            conv.autoNamed = true;
+            renderConversationList();
+          }
+        }
       } else if (data && data.error) {
         conv.messages.push(createMessage("assistant", `AI error: ${data.error}`));
       } else {
         conv.messages.push(createMessage("assistant", "No response from backend."));
       }
     }
-
     render();
-    saveState();
   } catch(err){
     console.error("Backend request failed:", err);
+    if (!conv) {
+      conv = { id: "local", title: "New Chat", provider, model, messages:[] };
+      appState.conversations.unshift(conv);
+      appState.activeConversationId = conv.id;
+    }
     conv.messages.push(createMessage("assistant", `AI response failed: ${err.message || err}`));
     render();
-    saveState();
   } finally {
     setLoading(false);
   }
 }
 
 function newChat(){ appState.activeConversationId=null; render(); }
-function clearChat(){
+async function clearChat(){
   const conv=appState.conversations.find(c=>c.id===appState.activeConversationId);
   if(!conv) return;
   conv.messages=[];
-  saveState();
+  await apiPost(`/conversations/${conv.id}/clear`, {});
   render();
 }
 
 function renderMarkdown(text){
-  if (window.marked) {
-    return marked.parse(text || "", { breaks: true });
-  }
+  if (window.marked) return marked.parse(text || "", { breaks: true });
   return (text || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
@@ -579,145 +771,107 @@ function enhanceCodeBlocks(container){
   });
 }
 
-loadState();
-render();
+let cachedVoices = [];
+function refreshVoices(){
+  if (!("speechSynthesis" in window)) return [];
+  cachedVoices = window.speechSynthesis.getVoices() || [];
+  return cachedVoices;
+}
+function populateVoiceSelect(select){
+  if (!select) return;
+  const voices = refreshVoices();
+  select.innerHTML = "";
+  if (!voices.length) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "Default voice";
+    select.appendChild(opt);
+    return;
+  }
+  voices.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang})`;
+    select.appendChild(opt);
+  });
+}
+window.speechSynthesis && (window.speechSynthesis.onvoiceschanged = () => {
+  document.querySelectorAll('[data-voice="true"]').forEach(sel => populateVoiceSelect(sel));
+});
 
-document.querySelector('#user-input').addEventListener('keypress', function(e){
+function speakText(text, voiceName=""){
+  if (!("speechSynthesis" in window)) {
+    showConfirm("TTS not supported", "Your browser does not support speech synthesis.", false);
+    return;
+  }
+  if (!text) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = refreshVoices();
+  if (voiceName) {
+    const match = voices.find(v => v.name === voiceName);
+    if (match) utter.voice = match;
+  }
+  utter.rate = 1;
+  utter.pitch = 1;
+  window.speechSynthesis.speak(utter);
+}
+function stopSpeak(){
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+}
+
+document.getElementById("collapse-btn").onclick = () => {
+  uiState.sidebarCollapsed = !uiState.sidebarCollapsed;
+  document.body.classList.toggle("sidebar-collapsed", uiState.sidebarCollapsed);
+  saveUi();
+};
+document.getElementById("stream-toggle").onchange = (e) => {
+  uiState.streamEnabled = e.target.checked;
+  saveUi();
+};
+
+loadUi();
+document.body.classList.toggle("sidebar-collapsed", uiState.sidebarCollapsed);
+document.getElementById("stream-toggle").checked = uiState.streamEnabled;
+
+function showConfirm(title, message, showCancel=true){
+  const modal = document.getElementById("confirm-modal");
+  document.getElementById("confirm-title").textContent = title || "Confirm";
+  document.getElementById("confirm-message").textContent = message || "";
+  const btnCancel = document.getElementById("confirm-cancel");
+  btnCancel.style.display = showCancel ? "inline-block" : "none";
+  modal.style.display = "flex";
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+  });
+}
+document.getElementById("confirm-cancel").onclick = () => {
+  const modal = document.getElementById("confirm-modal");
+  modal.style.display = "none";
+  if (confirmResolve) confirmResolve(false);
+  confirmResolve = null;
+};
+document.getElementById("confirm-ok").onclick = () => {
+  const modal = document.getElementById("confirm-modal");
+  modal.style.display = "none";
+  if (confirmResolve) confirmResolve(true);
+  confirmResolve = null;
+};
+document.getElementById("confirm-modal").onclick = (e) => {
+  if (e.target.id === "confirm-modal") {
+    const modal = document.getElementById("confirm-modal");
+    modal.style.display = "none";
+    if (confirmResolve) confirmResolve(false);
+    confirmResolve = null;
+  }
+};
+
+loadConversations().then(render);
+
+document.querySelector('#user-input').addEventListener('keydown', function(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
 });
-
-// --- Export & Search helpers ---
-function getAuthHeaders(){
-  const headers = { 'Content-Type': 'application/json' };
-  try{
-    const token = localStorage.getItem('auth_token');
-    if(token) headers['Authorization'] = `Bearer ${token}`;
-  }catch(e){}
-  return headers;
-}
-
-function toggleExportMenu(){
-  const menu = document.getElementById('export-menu');
-  const btn = document.getElementById('export-btn');
-  if(!menu) return;
-  const open = menu.style.display !== 'block';
-  menu.style.display = open ? 'block' : 'none';
-  if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-}
-const exportBtnEl = document.getElementById('export-btn');
-if(exportBtnEl) exportBtnEl.addEventListener('click', (e)=>{ e.stopPropagation(); toggleExportMenu(); });
-document.addEventListener('click', ()=>{ const m=document.getElementById('export-menu'); if(m) { m.style.display='none'; const btn=document.getElementById('export-btn'); if(btn) btn.setAttribute('aria-expanded','false'); } });
-
-async function exportCurrentSession(format){
-  const conv = appState.conversations.find(c=>c.id===appState.activeConversationId);
-  if(!conv){ alert('No active conversation to export'); return; }
-  const sid = conv.id;
-  const url = `/export?sessionId=${encodeURIComponent(sid)}&format=${encodeURIComponent(format)}`;
-  try{
-    const res = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
-    if(!res.ok){ const err = await res.json().catch(()=>({ error: 'Export failed' })); return alert('Export failed: '+(err.error||res.status)); }
-    const ct = res.headers.get('content-type')||'';
-    const blob = await res.blob();
-    const ext = format === 'md' ? 'md' : format === 'pdf' ? 'pdf' : 'json';
-    const filename = `${sid}.${ext}`;
-    const urlObj = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = urlObj; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(urlObj);
-  }catch(err){ console.error('Export failed', err); alert('Export failed: '+(err && err.message)); }
-}
-
-async function performSearch(){
-  const q = document.getElementById('search-input').value.trim();
-  if(!q) return alert('Enter search query');
-  try{
-    const res = await fetch(`/search?q=${encodeURIComponent(q)}`, { method: 'GET', headers: getAuthHeaders() });
-    if(!res.ok){ const err = await res.json().catch(()=>({ error: 'Search failed' })); return alert('Search error: '+(err.error||res.status)); }
-    const data = await res.json();
-    renderSearchResults(data.results || []);
-  }catch(err){ console.error('Search failed', err); alert('Search failed: '+(err && err.message)); }
-}
-
-function renderSearchResults(results){
-  const panel = document.getElementById('search-results');
-  const list = document.getElementById('search-results-list');
-  list.innerHTML = '';
-  if(!results || results.length===0){ list.innerHTML = '<div style="color:var(--muted)">No results</div>'; }
-  results.forEach(r=>{
-    const el = document.createElement('div');
-    el.style.padding='8px'; el.style.borderBottom='1px solid var(--border)'; el.style.cursor='pointer';
-    el.innerHTML = `<div style="font-weight:700;color:var(--text)">${r.sessionId}</div><div style="color:var(--muted);font-size:.9rem;margin-top:6px">${r.snippet||''}</div>`;
-    el.onclick = ()=>{ openSessionFromSearch(r.sessionId, r.message && r.message.content); };
-    list.appendChild(el);
-  });
-  panel.style.display = 'block';
-}
-
-function closeSearchResults(){ document.getElementById('search-results').style.display='none'; }
-
-function openSessionFromSearch(sessionId, snippet){
-  let conv = appState.conversations.find(c=>c.id===sessionId);
-  if(!conv){ // create a thin conversation placeholder and load history from backend
-    conv = { id: sessionId, title: 'Imported', provider: 'huggingface', model: '', messages: [], createdAt: Date.now() };
-    appState.conversations.push(conv);
-    // attempt to fetch full history
-    fetch(`/history?sessionId=${encodeURIComponent(sessionId)}`, { method: 'GET', headers: getAuthHeaders() }).then(r=>r.json().then(data=>{
-      if(data && data.messages) conv.messages = data.messages; saveState(); render();
-    }).catch(()=>{})).catch(()=>{});
-  }
-  appState.activeConversationId = sessionId; saveState(); render(); closeSearchResults();
-  if(snippet){ setTimeout(()=>{ alert('Snippet:\n'+String(snippet).slice(0,800)); }, 80); }
-}
-
-// Accessibility: keyboard handlers
-document.addEventListener('keydown', (e)=>{
-  // Close menus on Escape
-  if(e.key === 'Escape'){
-    const m = document.getElementById('export-menu'); if(m) { m.style.display='none'; }
-    const panel = document.getElementById('search-results'); if(panel) panel.style.display='none';
-    const exportBtn = document.getElementById('export-btn'); if(exportBtn) exportBtn.setAttribute('aria-expanded','false');
-  }
-});
-
-// Allow Enter in search input to trigger search
-const searchInputEl = document.getElementById('search-input');
-if(searchInputEl){ searchInputEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); performSearch(); } }); }
-</script>
-
-<!-- Auth token modal -->
-<div id="auth-modal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;position:fixed;inset:0;background:rgba(2,6,10,0.6);align-items:center;justify-content:center;z-index:60;">
-  <div style="background:var(--panel);border:1px solid var(--border);padding:18px;border-radius:12px;width:420px;max-width:92%;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <strong>Set Auth Token</strong>
-      <button class="btn-ghost" onclick="closeAuthModal()">Close</button>
-    </div>
-    <p style="color:var(--muted);font-size:.95rem;margin-bottom:8px">Paste a JWT Bearer token to use for protected API endpoints.</p>
-    <textarea id="auth-token-input" rows="3" style="width:100%;background:var(--panel-2);border:1px solid var(--border);padding:10px;border-radius:8px;color:var(--text);"></textarea>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
-      <button class="btn-ghost" onclick="clearAuthToken()">Clear</button>
-      <button class="btn-ghost" onclick="saveAuthToken()">Save</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  function openAuthModal(){
-    const modal = document.getElementById('auth-modal');
-    const input = document.getElementById('auth-token-input');
-    if(!modal || !input) return;
-    input.value = localStorage.getItem('auth_token') || '';
-    modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false'); input.focus();
-  }
-  function closeAuthModal(){ const modal=document.getElementById('auth-modal'); if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); } }
-  function saveAuthToken(){ const v=document.getElementById('auth-token-input').value.trim(); if(v) localStorage.setItem('auth_token', v); else localStorage.removeItem('auth_token'); closeAuthModal(); renderAuthStatus(); }
-  function clearAuthToken(){ localStorage.removeItem('auth_token'); document.getElementById('auth-token-input').value=''; renderAuthStatus(); }
-  function renderAuthStatus(){ const btn = document.getElementById('auth-btn'); const token = localStorage.getItem('auth_token'); if(btn){ btn.textContent = token ? 'Auth ●' : 'Auth'; btn.title = token ? 'Auth token set' : 'No auth token'; } }
-  document.addEventListener('DOMContentLoaded', renderAuthStatus);
-  // Also call immediately in case script loaded after DOMContent
-  renderAuthStatus();
-</script>
-<script>
-  function openAnalytics(){
-    window.open('/analytics.html','_blank');
-  }
 </script>
 
 </body>
