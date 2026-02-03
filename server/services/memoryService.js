@@ -62,6 +62,9 @@ async function appendMessage(sessionId, message){
   try{
     const all = fs.existsSync(SESSIONS_FILE) ? JSON.parse(fs.readFileSync(SESSIONS_FILE,'utf8')||'{}') : {};
     all[sessionId] = all[sessionId] || [];
+    if(encryption.isEnabled() && typeof all[sessionId] === 'string'){
+      try{ all[sessionId] = encryption.decryptJSON(all[sessionId]); }catch(e){ console.error('decrypt file appendMessage', e); all[sessionId] = []; }
+    }
     all[sessionId].push(message);
     if(all[sessionId].length>100) all[sessionId]=all[sessionId].slice(-100);
     if(encryption.isEnabled()){

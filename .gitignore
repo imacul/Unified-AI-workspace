@@ -1,5 +1,7 @@
 # Node deps
 node_modules/
+.env
+data/
 
 # Local envs and secrets
 .env

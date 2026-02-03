@@ -20,8 +20,7 @@ async function handleSendMessage(req, res){
 
     // build simple context: last 20 messages
     const history = await memory.getSession(sessionId);
-    const last = history.slice(-20).map(m => `${m.role}: ${m.content}`).join('\n');
-    const combinedPrompt = `${last}\nUser: ${text}`;
+    const combinedPrompt = history.slice(-20).map(m => `${m.role}: ${m.content}`).join('\n');
 
     // call provider router with failover. In production, surface provider errors.
     // For local developer convenience set DEV_FALLBACK=true in .env to return an echo fallback.

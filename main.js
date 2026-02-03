@@ -158,8 +158,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(204, {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, HEAD, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            "Access-Control-Allow-Credentials": "true"
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
         });
         res.end();
         return;
@@ -498,7 +497,7 @@ function callHuggingFaceStream(text, model = HF_DEFAULT_MODEL, systemPrompt="", 
 
         hfRes.on('end', () => {
             // persist collected assistant text (best-effort)
-            appendSessionMessage(sessionId, 'assistant', collected || buffer || '', model, model);
+            appendSessionMessage(sessionId, 'assistant', collected || buffer || '', 'huggingface', model);
             res.write("data: [DONE]\n\n");
             res.end();
         });
